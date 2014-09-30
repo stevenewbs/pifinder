@@ -4,7 +4,8 @@ pifinder
 Two simple python scripts that that use UDP to locate your Raspberry Pi on a network
 
 Useage
-++++++
+
+
 pifinder_server.py - designed to be called at boot time, needs permission to put the log into /var/log/
 pifinder_client.py - can be run from the command line from your PC
 
