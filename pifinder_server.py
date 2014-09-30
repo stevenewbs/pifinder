@@ -12,7 +12,7 @@ import subprocess
 import datetime
 
 # the response we will be looking for 
-pf_packet = bytearray("PIFINDER")
+pf_packet = "PIFINDER"
 
 # lazy function to get a current timestamp
 def ts():
@@ -39,13 +39,13 @@ class packetHandler(SocketServer.BaseRequestHandler):
 		if data == pf_packet: # if we get the magic sauce
 			m = self.getAddresses()
 			try:
-				s.sendto(m, self.client_address)
+				sock.sendto(m, self.client_address)
 			except (socket.timeout, socket.error) as e:
 				log("Error when responding - %s" % e)
 					
 	def getAddresses(self):
 		ps = subprocess.Popen("/sbin/ifconfig eth0", shell=True, stdout=subprocess.PIPE)
-		msg = bytearray()
+		msg = []
 		for line in iter(ps.stdout.readline, ''):
 			if "HWaddr" in line:
 				l = line.split(' ')
@@ -53,22 +53,18 @@ class packetHandler(SocketServer.BaseRequestHandler):
 					if item == "HWaddr":
 						macindex = index + 1
 						break
-				mac = l[macindex].split(":") # splits the mac into chunks by :'s
-				for bit in mac:
-					i = int(bit, 16)
-					msg.append(i)
+				mac = l[macindex] 
+				msg.append("\tMAC: %s" % mac)
 			elif "inet addr" in line:
 				l = line.strip().split(':')
 				for index, item in enumerate(l):
 					if item == "inet addr":
 						ipindex = index + 1
 						ipline = l[ipindex].split(' ') # splits line containing ip address by spaces
-						ip = ipline[0].split(".") # splits ip address into chunks by .'s
-						for bit in ip:
-							i = int(bit)
-							msg.append(i)			
+						ip = ipline[0]
+						msg.append("\tIP Address: %s " % ip)
 		
-		return msg
+		return '\n'.join(msg)
 	
 		
 class ThreadedUDPServer(SocketServer.ThreadingMixIn, SocketServer.UDPServer):
@@ -94,4 +90,8 @@ class Pi_Finder_Server():
 			while 1:
 				log("listening...") 
 				sleep(7200)
+
+if __name__ == "__main__":
+	s = Pi_Finder_Server()
+	s.start()
 
